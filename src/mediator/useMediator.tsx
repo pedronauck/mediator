@@ -1,52 +1,40 @@
-import { useInterpret } from "@xstate/react"
-import { createContext, ReactNode, useContext, useEffect, useId } from "react"
-import { useExecOnce } from "../hooks/useExecOnce"
-import { Events } from "./events"
-import {
-  Listener,
-  mediatorMachine,
-  MediatorMachineService,
-} from "./mediatorMachine"
+import { useEffect, useId } from "react"
+import { interpret, InterpreterStatus } from "xstate"
+import { Listener, mediatorMachine } from "./mediatorMachine"
 
-type Context = {
-  service: MediatorMachineService
+/**
+ * This will start the service outside React just one time
+ */
+const _service = interpret(mediatorMachine)
+if (_service.status !== InterpreterStatus.Running) {
+  _service.start()
 }
 
-const ctx = createContext<Context>({} as Context)
-
-type MediatorProps = {
-  children: ReactNode
+/**
+ * This function will create an event that will be used to send/register
+ * inside the mediator
+ */
+export function createEvent<T>(name: any) {
+  const fn = (data: T) => {
+    _service.send("send", { name, data })
+  }
+  fn._name = name
+  return fn
 }
 
-export function Mediator({ children }: MediatorProps) {
-  const service = useInterpret(() => mediatorMachine)
-  return <ctx.Provider value={{ service }}>{children}</ctx.Provider>
-}
+type Event<T> = (data: T) => void
 
-export function useMediator() {
-  const { service } = useContext(ctx)
+export function useSubscribe<T>(
+  event: Event<T>,
+  listener: Listener<T>,
+  deps?: any[],
+) {
   const id = useId()
-
-  function register<T = any>(
-    event: Events,
-    listener: Listener<T>,
-    deps?: any[],
-  ) {
-    useEffect(() => {
-      service.send("register", { data: { event, id, listener } })
-      return () => {
-        service.send("unregister", { data: { event, id } })
-      }
-    }, deps)
-  }
-
-  function send(event: Events, data: any) {
-    service.send(event as any, { data })
-  }
-
-  return {
-    events: Events,
-    register,
-    send,
-  }
+  const evName = (event as any)._name
+  useEffect(() => {
+    _service.send("register", { data: { event: evName, id, listener } })
+    return () => {
+      _service.send("unregister", { data: { event: evName, id } })
+    }
+  }, deps)
 }

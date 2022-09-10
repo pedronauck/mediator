@@ -1,8 +1,7 @@
 import { assign, createMachine, InterpreterFrom, StateFrom } from "xstate"
-import { Events } from "./events"
 
 export type Listener<T = any> = (data: T) => any
-type SubscriberMap = Map<Events, Map<string, Listener>>
+type SubscriberMap = Map<string, Map<string, Listener>>
 
 type MachineContext = {
   subscribers: SubscriberMap
@@ -11,11 +10,16 @@ type MachineContext = {
 type MachineEvents =
   | {
       type: "register"
-      data: { id: string; event: Events; listener: Listener }
+      data: { id: string; event: string; listener: Listener }
     }
   | {
       type: "unregister"
-      data: { id: string; event: Events }
+      data: { id: string; event: string }
+    }
+  | {
+      type: "send"
+      name: string
+      data: any
     }
 
 export const mediatorMachine = createMachine(
@@ -40,10 +44,9 @@ export const mediatorMachine = createMachine(
           unregister: {
             actions: "removeSubscriber",
           },
-          /** We need this to attach all events from the enum in the machine */
-          ...Object.values(Events).reduce((obj, key) => {
-            return { ...obj, [key]: { actions: "runListeners" } }
-          }, {}),
+          send: {
+            actions: "runListeners",
+          },
         },
       },
     },
@@ -87,10 +90,8 @@ export const mediatorMachine = createMachine(
       /**
        * This action is responsible to just run the listeners attached to the event
        */
-      /* @ts-ignore */
-      runListeners: async (ctx, ev: any) => {
-        const type = ev.type
-        const listeners = ctx.subscribers.get(type)
+      runListeners: async (ctx, ev) => {
+        const listeners = ctx.subscribers.get(ev.name)
         if (!listeners) return
 
         for (const listener of listeners.values()) {

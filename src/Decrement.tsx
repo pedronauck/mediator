@@ -1,6 +1,5 @@
-import { useMediator } from "./mediator"
+import * as events from "./events"
 
 export function Decrement() {
-  const { send, events } = useMediator()
-  return <button onClick={() => send(events.decrement, 2)}>Decrement</button>
+  return <button onClick={() => events.decrement(2)}>Decrement</button>
 }

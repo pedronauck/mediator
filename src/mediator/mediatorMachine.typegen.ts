@@ -15,6 +15,7 @@ export interface Typegen0 {
   eventsCausingActions: {
     addSubscriber: "register";
     removeSubscriber: "unregister";
+    runListeners: "send";
   };
   eventsCausingServices: {};
   eventsCausingGuards: {};

@@ -1,15 +1,15 @@
 import { useState } from "react"
-import { useMediator } from "./mediator"
+import { useSubscribe } from "./mediator"
+import * as events from "./events"
 
 export function Counter() {
-  const { register, events } = useMediator()
   const [count, setCount] = useState(0)
 
-  register<number>(events.increment, (num) => {
+  useSubscribe(events.increment, (num) => {
     setCount((count) => count + num)
   })
 
-  register<number>(events.decrement, (num) => {
+  useSubscribe(events.decrement, (num) => {
     setCount((count) => count - num)
   })
 

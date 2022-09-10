@@ -1,6 +1,5 @@
-import { useMediator } from "./mediator"
+import * as events from "./events"
 
 export function Increment() {
-  const { send, events } = useMediator()
-  return <button onClick={() => send(events.increment, 2)}>Increment</button>
+  return <button onClick={() => events.increment(2)}>Increment</button>
 }
