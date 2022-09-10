@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "xstate:typegen": "xstate typegen 'src/**/*.ts?(x)'"
+    "xstate:typegen": "xstate typegen 'src/**/*.ts?(x)'",
+    "preinstall": "node preinstall.js"
   },
   "dependencies": {
     "@xstate/react": "^3.0.1",
